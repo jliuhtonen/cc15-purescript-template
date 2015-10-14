@@ -28,6 +28,12 @@ newtype MsgHandlerContext = MsgHandlerContext {
 
 type AppMsgHandler eff = ReaderT MsgHandlerContext (Eff eff)
 
+toMessageReceiver :: String -> Int -> UDP.RemoteAddressInfo
+toMessageReceiver address port = UDP.RemoteAddressInfo {
+  address: address,
+  port: port  
+}
+
 sendMessage :: forall a eff. (EncodeJson a) => a -> UDP.RemoteAddressInfo -> AppMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
 sendMessage msg (UDP.RemoteAddressInfo { address: address, port: port }) = do
   MsgHandlerContext { socket: socket } <- ask

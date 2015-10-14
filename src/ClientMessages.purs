@@ -30,11 +30,11 @@ instance encodePong :: EncodeJson Pong where
     jsonEmptyObject
 
 newtype Join = Join {
-  connectionId :: String,
+  connectionId :: Int,
   name :: String,
   color :: String,
   gameId :: String,
-  players :: List Player
+  players :: Array Player
   }
 
 instance encodeJoin :: EncodeJson Join where
