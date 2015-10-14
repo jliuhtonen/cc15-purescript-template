@@ -19,11 +19,15 @@ import qualified Node.Datagram as UDP
 import Prelude
 
 import LoggingUtils
+import ClientMessages (Player())
 import ServerMessages
 
 newtype MsgHandlerContext = MsgHandlerContext {
   socket :: UDP.Socket,
-  lobbyServer :: UDP.RemoteAddressInfo
+  lobbyServer :: UDP.RemoteAddressInfo,
+  teamName :: String,
+  teamColor :: String,
+  players :: Array Player
 }
 
 type AppMsgHandler eff = ReaderT MsgHandlerContext (Eff eff)

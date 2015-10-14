@@ -14,6 +14,7 @@ import qualified Node.Datagram as UDP
 import qualified Node.Encoding as Encoding
 import qualified Node.Buffer as Buffer
 
+import ClientMessages
 import MessageHandling 
 import LoggingUtils
 import qualified Game as Game
@@ -22,9 +23,16 @@ import Prelude
 
 -- Config start
 lobbyServer = testServer
-teamName = "Rangers"
-color = "purple"
 initialGameId = Just "benders-game"
+teamName = "Rangers"
+teamColor = "purple"
+players :: Array Player
+players = [
+  Player { number: 1, name: "Simon" },
+  Player { number: 2, name: "Erik"  },
+  Player { number: 3, name: "Paul" },
+  Player { number: 4, name: "Philip" }
+]
 -- Config end
 
 -- Networking settings start
@@ -73,5 +81,8 @@ logListenStart _ = log "Listening for connections..."
 createAppContext :: UDP.Socket -> MsgHandlerContext
 createAppContext socket = MsgHandlerContext {
   socket: socket,
-  lobbyServer: lobbyServer  
+  lobbyServer: lobbyServer,
+  teamName: teamName,
+  teamColor: teamColor,
+  players: players
 }

@@ -35,17 +35,6 @@ initialState = State {
   game: Nothing
 }
 
-teamName = "Rangers"
-teamColor = "purple"
-
-players :: Array Player
-players = [
-  Player { number: 1, name: "Simon" },
-  Player { number: 2, name: "Erik"  },
-  Player { number: 3, name: "Paul" },
-  Player { number: 4, name: "Philip" }
-]
-
 handleIncomingMsg :: forall e. UDP.RemoteAddressInfo -> State -> ServerMessage -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) State
 
 handleIncomingMsg sender (State state) (Ping) = do
@@ -69,15 +58,12 @@ handleIncomingMsg _ (State state) (GameAt (GameObject { address: address, port: 
   pure $ State state
 
 joinGame :: forall e. String -> Int -> String -> Int -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) Unit
-joinGame address port gameId connectionId = sendMessage joinMsg gameServer where
-  gameServer = toMessageReceiver address port
-  joinMsg = Join {
-    connectionId: connectionId,
-    name: teamName,
-    color: teamColor,
-    gameId: gameId,
-    players: players
-  } 
+joinGame address port gameId connectionId = do
+  MsgHandlerContext { teamName: teamName, teamColor: teamColor, players: players } <- ask
+  let gameServer = toMessageReceiver address port
+  let joinMsg = Join { connectionId: connectionId, name: teamName, color: teamColor,
+                        gameId: gameId, players: players } 
+  sendMessage joinMsg gameServer
 
 connect :: String -> Maybe String -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET) Unit
 connect name gameId = do
