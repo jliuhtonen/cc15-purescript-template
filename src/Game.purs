@@ -15,14 +15,9 @@ import MessageHandling
 import ServerMessages
 import ClientMessages
 
-type Server = {
-  address :: UDP.Address,
-  port :: UDP.Port  
-}
-
 type Game = {
-  gameId :: String,
-  server :: Server   
+  server :: UDP.RemoteAddressInfo,
+  gameId :: String
 }
 
 newtype State = State {
@@ -54,16 +49,27 @@ handleIncomingMsg _ state (Goodbye) = do
 
 handleIncomingMsg _ (State state) (GameAt (GameObject { address: address, port: port, gameId: gameId })) = do
   appLog $ "Joining game " ++ gameId ++ " at " ++ address ++ ":" ++ show port
-  traverse_ (joinGame address port gameId) state.connectionId
-  pure $ State state
+  let server = UDP.RemoteAddressInfo { address: address, port: port }
+  traverse_ (joinGame server gameId) state.connectionId
+  let game = { gameId: gameId, server: server }
+  let updatedState = state { game = Just game }
+  pure $ State updatedState
 
-joinGame :: forall e. String -> Int -> String -> Int -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) Unit
-joinGame address port gameId connectionId = do
+handleIncomingMsg _ state (JoinOk) = do
+  appLog "Successfully joined game!"
+  pure state
+
+handleIncomingMsg _ (State state) (JoinError err) = do
+  appLog $ "Error joining game: " ++ err
+  let updatedState = state { game = Nothing }
+  pure $ State updatedState
+
+joinGame :: forall e. UDP.RemoteAddressInfo -> String -> Int -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) Unit
+joinGame server gameId connectionId = do
   MsgHandlerContext { teamName: teamName, teamColor: teamColor, players: players } <- ask
-  let gameServer = toMessageReceiver address port
   let joinMsg = Join { connectionId: connectionId, name: teamName, color: teamColor,
                         gameId: gameId, players: players } 
-  sendMessage joinMsg gameServer
+  sendMessage joinMsg server
 
 connect :: String -> Maybe String -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET) Unit
 connect name gameId = do
