@@ -1,4 +1,9 @@
-module Bot where
+module Bot (
+  State(..),
+  initialState,
+  connect,
+  handleIncomingMsg
+) where
 
 import Control.Monad.Eff.Console
 import Data.Maybe
@@ -29,6 +34,13 @@ initialState = State {
   connectionId: Nothing,
   game: Nothing
 }
+
+connect :: String -> Maybe String -> BotMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET) Unit
+connect name gameId = do
+  MsgHandlerContext { lobbyServer: lobbyServer } <- ask
+  appLog $ "Connecting to " ++ (show gameId)
+  let connect = Connect { name: name, gameId: gameId } 
+  sendMessage connect lobbyServer
 
 handleIncomingMsg :: forall e. UDP.RemoteAddressInfo -> State -> ServerMessage -> BotMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) State
 
@@ -70,13 +82,6 @@ joinGame server gameId connectionId = do
   let joinMsg = Join { connectionId: connectionId, name: teamName, color: teamColor,
                         gameId: gameId, players: players } 
   sendMessage joinMsg server
-
-connect :: String -> Maybe String -> BotMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET) Unit
-connect name gameId = do
-  MsgHandlerContext { lobbyServer: lobbyServer } <- ask
-  appLog $ "Connecting to " ++ (show gameId)
-  let connect = Connect { name: name, gameId: gameId } 
-  sendMessage connect lobbyServer
 
 appLog :: forall e. String -> BotMsgHandler (console :: CONSOLE | e) Unit
 appLog = lift <<< log
