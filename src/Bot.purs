@@ -1,5 +1,6 @@
 module Bot (
   State(..),
+  Game(..),
   initialState,
   connect,
   handleIncomingMsg
