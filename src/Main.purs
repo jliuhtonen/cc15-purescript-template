@@ -62,7 +62,7 @@ runBot socket context = do
   let msgListener = createMessageListener socket context serverState
   runAff logError logListenStart $ UDP.onMessage msgListener socket
 
-createMessageListener :: forall h eff. UDP.Socket -> MsgHandlerContext -> STRef h Bot.State -> UDP.MessageListener (console :: CONSOLE, socket :: UDP.SOCKET, st :: ST h | eff)
+createMessageListener :: forall h eff. UDP.Socket -> MsgHandlerContext -> STRef h Bot.State -> UDP.MessageListener (console :: CONSOLE, socket :: UDP.SOCKET, st :: ST h | eff) Unit
 createMessageListener socket context serverState = \buf rinfo -> do
   let msg = Buffer.toString encoding buf
   let parsedJson = parseIncomingMsg msg
