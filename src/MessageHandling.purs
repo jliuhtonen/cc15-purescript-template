@@ -1,9 +1,9 @@
 module MessageHandling(
   MsgHandlerContext(..),
   BotMsgHandler(),
+  parseIncomingMsg,
   sendMessage,
-  closeSocket,
-  parseIncomingMsg  
+  closeSocket
 ) where
 
 import Control.Monad.Aff
@@ -38,6 +38,9 @@ newtype MsgHandlerContext = MsgHandlerContext {
 
 type BotMsgHandler eff = ReaderT MsgHandlerContext (Eff eff)
 
+parseIncomingMsg :: String -> Either String ServerMessage
+parseIncomingMsg msg = jsonParser msg >>= decodeJson 
+
 sendMessage :: forall a eff. (EncodeJson a) => a -> UDP.RemoteAddressInfo -> BotMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
 sendMessage msg (UDP.RemoteAddressInfo { address: address, port: port }) = do
   MsgHandlerContext { socket: socket } <- ask
@@ -59,5 +62,3 @@ sendStringToSocket socket address port msg =
   UDP.send buffer 0 (Buffer.size buffer) port address socket where
     buffer = Buffer.fromString msg Encoding.UTF8
 
-parseIncomingMsg :: String -> Either String ServerMessage
-parseIncomingMsg msg = jsonParser msg >>= (decodeJson :: Json -> Either String ServerMessage)
