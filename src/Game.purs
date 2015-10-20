@@ -30,7 +30,7 @@ initialState = State {
   game: Nothing
 }
 
-handleIncomingMsg :: forall e. UDP.RemoteAddressInfo -> State -> ServerMessage -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) State
+handleIncomingMsg :: forall e. UDP.RemoteAddressInfo -> State -> ServerMessage -> BotMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) State
 
 handleIncomingMsg sender (State state) (Ping) = do
   appLog "Sending pong"
@@ -64,19 +64,19 @@ handleIncomingMsg _ (State state) (JoinError err) = do
   let updatedState = state { game = Nothing }
   pure $ State updatedState
 
-joinGame :: forall e. UDP.RemoteAddressInfo -> String -> Int -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) Unit
+joinGame :: forall e. UDP.RemoteAddressInfo -> String -> Int -> BotMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET | e) Unit
 joinGame server gameId connectionId = do
   MsgHandlerContext { teamName: teamName, teamColor: teamColor, players: players } <- ask
   let joinMsg = Join { connectionId: connectionId, name: teamName, color: teamColor,
                         gameId: gameId, players: players } 
   sendMessage joinMsg server
 
-connect :: String -> Maybe String -> AppMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET) Unit
+connect :: String -> Maybe String -> BotMsgHandler (console :: CONSOLE, socket :: UDP.SOCKET) Unit
 connect name gameId = do
   MsgHandlerContext { lobbyServer: lobbyServer } <- ask
   appLog $ "Connecting to " ++ (show gameId)
   let connect = Connect { name: name, gameId: gameId } 
   sendMessage connect lobbyServer
 
-appLog :: forall e. String -> AppMsgHandler (console :: CONSOLE | e) Unit
+appLog :: forall e. String -> BotMsgHandler (console :: CONSOLE | e) Unit
 appLog = lift <<< log

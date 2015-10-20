@@ -30,21 +30,21 @@ newtype MsgHandlerContext = MsgHandlerContext {
   players :: Array Player
 }
 
-type AppMsgHandler eff = ReaderT MsgHandlerContext (Eff eff)
+type BotMsgHandler eff = ReaderT MsgHandlerContext (Eff eff)
 
-sendMessage :: forall a eff. (EncodeJson a) => a -> UDP.RemoteAddressInfo -> AppMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
+sendMessage :: forall a eff. (EncodeJson a) => a -> UDP.RemoteAddressInfo -> BotMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
 sendMessage msg (UDP.RemoteAddressInfo { address: address, port: port }) = do
   MsgHandlerContext { socket: socket } <- ask
   let jsonStr = printJson $ encodeJson msg
   let socketSendAction = sendStringToSocket socket address port jsonStr
   runSocketActionLoggingErrors socketSendAction
 
-closeSocket :: forall eff. AppMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
+closeSocket :: forall eff. BotMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
 closeSocket = do
   MsgHandlerContext { socket: socket } <- ask
   runSocketActionLoggingErrors $ UDP.unref socket
 
-runSocketActionLoggingErrors :: forall a eff. Aff (socket :: UDP.SOCKET, console :: CONSOLE | eff) a -> AppMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
+runSocketActionLoggingErrors :: forall a eff. Aff (socket :: UDP.SOCKET, console :: CONSOLE | eff) a -> BotMsgHandler (socket :: UDP.SOCKET, console :: CONSOLE | eff) Unit
 runSocketActionLoggingErrors action =
   lift <<< catchException logError $ launchAff action
 
