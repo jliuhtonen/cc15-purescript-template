@@ -1,4 +1,10 @@
-module MessageHandling where
+module MessageHandling(
+  MsgHandlerContext(..),
+  BotMsgHandler(),
+  sendMessage,
+  closeSocket,
+  parseIncomingMsg  
+) where
 
 import Control.Monad.Aff
 import Control.Monad.Eff
