@@ -51,19 +51,19 @@ main = launchAff $ do
   socket <- UDP.createSocket socketType
   UDP.onError logError socket
   addrInfo <- UDP.bindSocket listenPort listenInterfaces socket
-  let appContext = createAppContext socket
+  let botContext = createAppContext socket
   AConsole.log $ show addrInfo
-  liftEff $ (runST (runServer socket appContext))
-  liftEff $ runReaderT (Game.connect teamName initialGameId) appContext
+  liftEff $ (runST (runBot socket botContext))
+  liftEff $ runReaderT (Game.connect teamName initialGameId) botContext
 
-runServer :: forall h eff. UDP.Socket -> MsgHandlerContext -> Eff (st :: ST h, console :: CONSOLE, socket :: UDP.SOCKET | eff) Unit
-runServer socket context = do
+runBot :: forall h eff. UDP.Socket -> MsgHandlerContext -> Eff (st :: ST h, console :: CONSOLE, socket :: UDP.SOCKET | eff) Unit
+runBot socket context = do
   serverState <- newSTRef Game.initialState
-  let msgListener = createMessageDispatcher socket context serverState
+  let msgListener = createMessageListener socket context serverState
   runAff logError logListenStart $ UDP.onMessage msgListener socket
 
-createMessageDispatcher :: forall h eff. UDP.Socket -> MsgHandlerContext -> STRef h Game.State -> UDP.MessageListener (console :: CONSOLE, socket :: UDP.SOCKET, st :: ST h | eff)
-createMessageDispatcher socket context serverState = \buf rinfo -> do
+createMessageListener :: forall h eff. UDP.Socket -> MsgHandlerContext -> STRef h Game.State -> UDP.MessageListener (console :: CONSOLE, socket :: UDP.SOCKET, st :: ST h | eff)
+createMessageListener socket context serverState = \buf rinfo -> do
   let msg = Buffer.toString encoding buf
   let parsedJson = parseIncomingMsg msg
   case parsedJson of
