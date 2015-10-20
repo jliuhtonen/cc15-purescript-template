@@ -1,4 +1,4 @@
-module Game where
+module Bot where
 
 import Control.Monad.Eff.Console
 import Data.Maybe

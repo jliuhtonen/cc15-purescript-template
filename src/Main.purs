@@ -17,7 +17,7 @@ import qualified Node.Buffer as Buffer
 import ClientMessages
 import MessageHandling 
 import LoggingUtils
-import qualified Game as Game
+import qualified Bot as Bot
 
 import Prelude
 
@@ -54,15 +54,15 @@ main = launchAff $ do
   let botContext = createAppContext socket
   AConsole.log $ show addrInfo
   liftEff $ (runST (runBot socket botContext))
-  liftEff $ runReaderT (Game.connect teamName initialGameId) botContext
+  liftEff $ runReaderT (Bot.connect teamName initialGameId) botContext
 
 runBot :: forall h eff. UDP.Socket -> MsgHandlerContext -> Eff (st :: ST h, console :: CONSOLE, socket :: UDP.SOCKET | eff) Unit
 runBot socket context = do
-  serverState <- newSTRef Game.initialState
+  serverState <- newSTRef Bot.initialState
   let msgListener = createMessageListener socket context serverState
   runAff logError logListenStart $ UDP.onMessage msgListener socket
 
-createMessageListener :: forall h eff. UDP.Socket -> MsgHandlerContext -> STRef h Game.State -> UDP.MessageListener (console :: CONSOLE, socket :: UDP.SOCKET, st :: ST h | eff)
+createMessageListener :: forall h eff. UDP.Socket -> MsgHandlerContext -> STRef h Bot.State -> UDP.MessageListener (console :: CONSOLE, socket :: UDP.SOCKET, st :: ST h | eff)
 createMessageListener socket context serverState = \buf rinfo -> do
   let msg = Buffer.toString encoding buf
   let parsedJson = parseIncomingMsg msg
@@ -70,7 +70,7 @@ createMessageListener socket context serverState = \buf rinfo -> do
        (Left errMsg) -> log $ "Error parsing JSON: " ++ errMsg
        (Right msg) -> do
          currentState <- readSTRef serverState
-         let handler = Game.handleIncomingMsg rinfo currentState msg
+         let handler = Bot.handleIncomingMsg rinfo currentState msg
          newState <- runReaderT handler context
          writeSTRef serverState newState
          pure unit
