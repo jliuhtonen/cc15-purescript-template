@@ -15,7 +15,7 @@ import MessageHandling
 import ServerMessages
 import ClientMessages
 
-type Game = {
+newtype Game = Game {
   server :: UDP.RemoteAddressInfo,
   gameId :: String
 }
@@ -51,7 +51,7 @@ handleIncomingMsg _ (State state) (GameAt (GameObject { address: address, port: 
   appLog $ "Joining game " ++ gameId ++ " at " ++ address ++ ":" ++ show port
   let server = UDP.RemoteAddressInfo { address: address, port: port }
   traverse_ (joinGame server gameId) state.connectionId
-  let game = { gameId: gameId, server: server }
+  let game = Game { gameId: gameId, server: server }
   let updatedState = state { game = Just game }
   pure $ State updatedState
 
